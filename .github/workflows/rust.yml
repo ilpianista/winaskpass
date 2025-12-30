@@ -6,11 +6,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-
 jobs:
   build:
     name: Build
@@ -73,6 +68,16 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: winaskpass-${{ github.sha }}
+          path: target/release/winaskpass
+          if-no-files-found: error
 
       - name: Publish
       # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
