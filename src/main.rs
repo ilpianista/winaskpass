@@ -13,12 +13,11 @@ fn extract_key_path(prompt: &str) -> Option<&str> {
     let prompt = prompt.trim();
 
     // Try pattern with quotes first
-    if let Some(start) = prompt.find("'") {
-        if let Some(end) = prompt.rfind("'") {
-            if end > start {
-                return Some(&prompt[start + 1..end]);
-            }
-        }
+    if let Some(start) = prompt.find("'")
+        && let Some(end) = prompt.rfind("'")
+        && end > start
+    {
+        return Some(&prompt[start + 1..end]);
     }
 
     // Try pattern without quotes: "Enter passphrase for /path/to/key:"
@@ -53,10 +52,10 @@ fn handle_askpass(prompt: &str) -> Result<()> {
     // Prompt user for password
     match dialog::prompt_password(key_path)? {
         Some(result) => {
-            if result.save {
-                if let Err(e) = credential::store_credential(key_path, &result.password) {
-                    eprintln!("Warning: Failed to save credential: {}", e);
-                }
+            if result.save
+                && let Err(e) = credential::store_credential(key_path, &result.password)
+            {
+                eprintln!("Warning: Failed to save credential: {}", e);
             }
             print!("{}", result.password);
             Ok(())
