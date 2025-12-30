@@ -127,27 +127,18 @@ mod tests {
     #[test]
     fn test_extract_key_path_with_quotes() {
         let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa': ";
-        assert_eq!(
-            extract_key_path(prompt),
-            Some("/home/user/.ssh/id_rsa")
-        );
+        assert_eq!(extract_key_path(prompt), Some("/home/user/.ssh/id_rsa"));
     }
 
     #[test]
     fn test_extract_key_path_without_quotes() {
         let prompt = "Enter passphrase for /home/user/.ssh/id_ed25519: ";
-        assert_eq!(
-            extract_key_path(prompt),
-            Some("/home/user/.ssh/id_ed25519")
-        );
+        assert_eq!(extract_key_path(prompt), Some("/home/user/.ssh/id_ed25519"));
     }
 
     #[test]
     fn test_extract_key_path_with_spaces() {
         let prompt = "Enter passphrase for '/home/user/my keys/id_rsa': ";
-        assert_eq!(
-            extract_key_path(prompt),
-            Some("/home/user/my keys/id_rsa")
-        );
+        assert_eq!(extract_key_path(prompt), Some("/home/user/my keys/id_rsa"));
     }
 }
