@@ -6,7 +6,7 @@ pub struct PromptResult {
     pub save: bool,
 }
 
-pub fn prompt_password(key_path: &str) -> Result<Option<PromptResult>> {
+pub fn prompt_password(prompt: &str) -> Result<Option<PromptResult>> {
     // Use Windows CredUIPromptForWindowsCredentialsW via PowerShell
     // This newer API supports both save checkbox and pre-filled username
     let script = format!(
@@ -132,7 +132,7 @@ public class CredUI {{
 "@
 
 $save = $false
-$password = [CredUI]::Prompt("SSH Key Passphrase", "Enter passphrase for:`n{key_path}", "{username}", [ref]$save)
+$password = [CredUI]::Prompt("SSH Key Passphrase", "{prompt}", "", [ref]$save)
 if ($password -ne $null) {{
     # Output format: SAVE|password or NOSAVE|password
     if ($save) {{
@@ -142,8 +142,7 @@ if ($password -ne $null) {{
     }}
 }}
 "#,
-        key_path = key_path.replace("`", "``").replace("'", "''"),
-        username = ""
+        prompt = prompt.replace("`", "``").replace("'", "''")
     );
 
     let output = Command::new("powershell.exe")

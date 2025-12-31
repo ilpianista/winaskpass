@@ -34,29 +34,23 @@ fn extract_key_path(prompt: &str) -> Option<&str> {
 }
 
 fn handle_askpass(prompt: &str) -> Result<()> {
-    let key_path = match extract_key_path(prompt) {
-        Some(path) => path,
-        None => {
-            // If we can't parse the prompt, just show it as-is in the dialog
-            eprintln!("Warning: Could not parse key path from prompt");
-            prompt
-        }
-    };
+    let key_path = extract_key_path(prompt);
 
     // Try to get cached credential
-    if let Some(password) = credential::get_credential(key_path)? {
-        print!("{}", password);
-        return Ok(());
-    }
+    if let Some(path) = key_path
+        && let Some(password) = credential::get_credential(path)? {
+            print!("{}", password);
+            return Ok(());
+        }
 
     // Prompt user for password
-    match dialog::prompt_password(key_path)? {
+    match dialog::prompt_password(prompt)? {
         Some(result) => {
             if result.save
-                && let Err(e) = credential::store_credential(key_path, &result.password)
-            {
-                eprintln!("Warning: Failed to save credential: {}", e);
-            }
+                && let Some(path) = key_path
+                    && let Err(e) = credential::store_credential(path, &result.password) {
+                        eprintln!("Warning: Failed to save credential: {}", e);
+                    }
             print!("{}", result.password);
             Ok(())
         }
