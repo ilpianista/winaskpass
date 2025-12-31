@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/ilpianista/winaskpass/compare/v0.1.0...v0.2.0) (2025-12-31)
+
+
+### Features
+
+* show save checkbox only if we have a key path ([036cd26](https://github.com/ilpianista/winaskpass/commit/036cd26835177474a7aef4176853a815ad6a980e))
+* show the original prompt in the dialog ([72ba01a](https://github.com/ilpianista/winaskpass/commit/72ba01a2b759a8851ea16d7719b0ed42d63eead1))
+
 ## 0.1.0 (2025-12-30)
 
 
