@@ -44,7 +44,8 @@ fn handle_askpass(prompt: &str) -> Result<()> {
         }
 
     // Prompt user for password
-    match dialog::prompt_password(prompt)? {
+    // Only show save checkbox if we have a key path to save against
+    match dialog::prompt_password(prompt, key_path.is_some())? {
         Some(result) => {
             if result.save
                 && let Some(path) = key_path

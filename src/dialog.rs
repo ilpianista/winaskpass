@@ -6,7 +6,7 @@ pub struct PromptResult {
     pub save: bool,
 }
 
-pub fn prompt_password(prompt: &str) -> Result<Option<PromptResult>> {
+pub fn prompt_password(prompt: &str, show_save_checkbox: bool) -> Result<Option<PromptResult>> {
     // Use Windows CredUIPromptForWindowsCredentialsW via PowerShell
     // This newer API supports both save checkbox and pre-filled username
     let script = format!(
@@ -88,7 +88,11 @@ public class CredUI {{
             IntPtr outBuffer;
             uint outBufferSize;
 
-            int flags = CREDUIWIN_GENERIC | CREDUIWIN_CHECKBOX | CREDUIWIN_IN_CRED_ONLY;
+            int flags = CREDUIWIN_GENERIC | CREDUIWIN_IN_CRED_ONLY;
+            bool showCheckbox = {show_checkbox};
+            if (showCheckbox) {{
+                flags |= CREDUIWIN_CHECKBOX;
+            }}
 
             int result = CredUIPromptForWindowsCredentialsW(
                 ref info,
@@ -142,7 +146,8 @@ if ($password -ne $null) {{
     }}
 }}
 "#,
-        prompt = prompt.replace("`", "``").replace("'", "''")
+        prompt = prompt.replace("`", "``").replace("'", "''"),
+        show_checkbox = if show_save_checkbox { "true" } else { "false" }
     );
 
     let output = Command::new("powershell.exe")
