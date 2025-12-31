@@ -27,7 +27,9 @@ cargo build --release --locked
 
 To make `ssh` use `winaskpass` set `SSH_ASKPASS=/path/to/winaskpass`.
 
-`SSH_ASKPASS_REQUIRE=force` might be required as well.
+`SSH_ASKPASS_REQUIRE=prefer` might be required as well.
+
+Then invoke `ssh-add </dev/null`.
 
 ## License
 

@@ -77,7 +77,7 @@ fn handle_list() -> Result<()> {
 
 fn print_help() {
     eprintln!(
-        r#"winaskpass - SSH_ASKPASS helper for WSL with Windows Credential Manager
+        r#"winaskpass - ssh-add helper for WSL with Windows Credential Manager
 
 USAGE:
     winaskpass <prompt>           SSH_ASKPASS mode: respond to ssh-add prompt
@@ -86,11 +86,11 @@ USAGE:
 
 SETUP:
     Add to your ~/.bashrc or ~/.zshrc:
-        export SSH_ASKPASS="$(which winaskpass)"
+        export SSH_ASKPASS=winaskpass
         export SSH_ASKPASS_REQUIRE=prefer
 
     Then use ssh-add normally:
-        ssh-add ~/.ssh/id_rsa
+        ssh-add </dev/null
 
     The passphrase will be cached in Windows Credential Manager.
 "#
