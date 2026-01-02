@@ -4,6 +4,13 @@ mod dialog;
 use anyhow::Result;
 use std::env;
 
+fn is_host_authenticity_prompt(prompt: &str) -> bool {
+    // SSH sends prompts like:
+    // "The authenticity of host 'foo (1.2.3.4)' can't be established..."
+    // "Are you sure you want to continue connecting (yes/no/[fingerprint])?"
+    prompt.contains("authenticity of host") || prompt.contains("continue connecting (yes/no")
+}
+
 fn extract_key_path(prompt: &str) -> Option<&str> {
     // ssh-add sends prompts like:
     // "Enter passphrase for /home/user/.ssh/id_rsa: "
@@ -34,30 +41,47 @@ fn extract_key_path(prompt: &str) -> Option<&str> {
 }
 
 fn handle_askpass(prompt: &str) -> Result<()> {
-    let key_path = extract_key_path(prompt);
+    // Handle SSH host authenticity prompts separately
+    // These require user confirmation, not credential retrieval
+    if is_host_authenticity_prompt(prompt) {
+        match dialog::prompt_confirmation(prompt)? {
+            Some(answer) => {
+                print!("{}", answer);
+                Ok(())
+            }
+            None => {
+                // User cancelled
+                std::process::exit(1);
+            }
+        }
+    } else {
+        let key_path = extract_key_path(prompt);
 
-    // Try to get cached credential
-    if let Some(path) = key_path
-        && let Some(password) = credential::get_credential(path)? {
+        // Try to get cached credential
+        if let Some(path) = key_path
+            && let Some(password) = credential::get_credential(path)?
+        {
             print!("{}", password);
             return Ok(());
         }
 
-    // Prompt user for password
-    // Only show save checkbox if we have a key path to save against
-    match dialog::prompt_password(prompt, key_path.is_some())? {
-        Some(result) => {
-            if result.save
-                && let Some(path) = key_path
-                    && let Err(e) = credential::store_credential(path, &result.password) {
-                        eprintln!("Warning: Failed to save credential: {}", e);
-                    }
-            print!("{}", result.password);
-            Ok(())
-        }
-        None => {
-            // User cancelled
-            std::process::exit(1);
+        // Prompt user for password
+        // Only show save checkbox if we have a key path to save against
+        match dialog::prompt_password(prompt, key_path.is_some())? {
+            Some(result) => {
+                if result.save
+                    && let Some(path) = key_path
+                    && let Err(e) = credential::store_credential(path, &result.password)
+                {
+                    eprintln!("Warning: Failed to save credential: {}", e);
+                }
+                print!("{}", result.password);
+                Ok(())
+            }
+            None => {
+                // User cancelled
+                std::process::exit(1);
+            }
         }
     }
 }
@@ -134,5 +158,23 @@ mod tests {
     fn test_extract_key_path_with_spaces() {
         let prompt = "Enter passphrase for '/home/user/my keys/id_rsa': ";
         assert_eq!(extract_key_path(prompt), Some("/home/user/my keys/id_rsa"));
+    }
+
+    #[test]
+    fn test_is_host_authenticity_prompt() {
+        let prompt = "The authenticity of host 'foo (1.2.3.4)' can't be established.\nED25519 key fingerprint is SHA256:UAkZs2L2FLJCmHnXBQPFrPitO1n7ChQBy7fUXjz5xAk.\nThis key is not known by any other names.\nAre you sure you want to continue connecting (yes/no/[fingerprint])?";
+        assert!(is_host_authenticity_prompt(prompt));
+    }
+
+    #[test]
+    fn test_is_host_authenticity_prompt_short() {
+        let prompt = "Are you sure you want to continue connecting (yes/no/[fingerprint])?";
+        assert!(is_host_authenticity_prompt(prompt));
+    }
+
+    #[test]
+    fn test_passphrase_prompt_is_not_host_authenticity() {
+        let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa': ";
+        assert!(!is_host_authenticity_prompt(prompt));
     }
 }

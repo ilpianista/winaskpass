@@ -6,6 +6,46 @@ pub struct PromptResult {
     pub save: bool,
 }
 
+/// Shows a confirmation dialog with Yes/No/Cancel buttons.
+/// Returns Some("yes"), Some("no"), or None if cancelled.
+pub fn prompt_confirmation(prompt: &str) -> Result<Option<String>> {
+    // Use Windows MessageBox via PowerShell
+    let script = format!(
+        r#"
+Add-Type -AssemblyName System.Windows.Forms
+$result = [System.Windows.Forms.MessageBox]::Show(
+    '{prompt}',
+    'SSH Host Verification',
+    [System.Windows.Forms.MessageBoxButtons]::YesNoCancel,
+    [System.Windows.Forms.MessageBoxIcon]::Warning
+)
+switch ($result) {{
+    'Yes' {{ 'yes' }}
+    'No' {{ 'no' }}
+    default {{ '' }}
+}}
+"#,
+        prompt = prompt.replace("'", "''").replace("`", "``")
+    );
+
+    let output = Command::new("powershell.exe")
+        .args(["-NoProfile", "-Command", &script])
+        .output()
+        .context("Failed to execute PowerShell")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("PowerShell error: {}", stderr);
+    }
+
+    let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if result.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(result))
+    }
+}
+
 pub fn prompt_password(prompt: &str, show_save_checkbox: bool) -> Result<Option<PromptResult>> {
     // Use Windows CredUIPromptForWindowsCredentialsW via PowerShell
     // This newer API supports both save checkbox and pre-filled username
