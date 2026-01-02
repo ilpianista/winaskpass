@@ -1,6 +1,6 @@
 [package]
 name = "winaskpass"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["Andrea Scarpino <andrea@scarpino.dev>"]
 description = "ssh-add helper for WSL that stores passphrases in Windows Credential Manager"
