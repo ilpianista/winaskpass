@@ -6,11 +6,12 @@ pub struct PromptResult {
     pub save: bool,
 }
 
-/// Shows a confirmation dialog with Yes/No/Cancel buttons.
-/// Returns Some("yes"), Some("no"), or None if cancelled.
-pub fn prompt_confirmation(prompt: &str) -> Result<Option<String>> {
-    // Use Windows MessageBox via PowerShell
-    let script = format!(
+fn escape_ps_single_quoted(input: &str) -> String {
+    input.replace("'", "''")
+}
+
+pub(crate) fn build_confirmation_script(prompt: &str) -> String {
+    format!(
         r#"
 Add-Type -AssemblyName System.Windows.Forms
 $result = [System.Windows.Forms.MessageBox]::Show(
@@ -25,8 +26,15 @@ switch ($result) {{
     default {{ '' }}
 }}
 "#,
-        prompt = prompt.replace("'", "''").replace("`", "``")
-    );
+        prompt = escape_ps_single_quoted(prompt)
+    )
+}
+
+/// Shows a confirmation dialog with Yes/No/Cancel buttons.
+/// Returns Some("yes"), Some("no"), or None if cancelled.
+pub fn prompt_confirmation(prompt: &str) -> Result<Option<String>> {
+    // Use Windows MessageBox via PowerShell
+    let script = build_confirmation_script(prompt);
 
     let output = Command::new("powershell.exe")
         .args(["-NoProfile", "-Command", &script])
@@ -49,7 +57,48 @@ switch ($result) {{
 pub fn prompt_password(prompt: &str, show_save_checkbox: bool) -> Result<Option<PromptResult>> {
     // Use Windows CredUIPromptForWindowsCredentialsW via PowerShell
     // This newer API supports both save checkbox and pre-filled username
-    let script = format!(
+    let script = build_password_script(prompt, show_save_checkbox);
+
+    let output = Command::new("powershell.exe")
+        .args(["-NoProfile", "-Command", &script])
+        .output()
+        .context("Failed to execute PowerShell")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        // Check if user cancelled
+        if stderr.contains("1223") || output.stdout.is_empty() {
+            return Ok(None);
+        }
+        anyhow::bail!("PowerShell error: {}", stderr);
+    }
+
+    let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if result.is_empty() {
+        return Ok(None);
+    }
+
+    if let Some(password) = result.strip_prefix("SAVE|") {
+        Ok(Some(PromptResult {
+            password: password.to_string(),
+            save: true,
+        }))
+    } else if let Some(password) = result.strip_prefix("NOSAVE|") {
+        Ok(Some(PromptResult {
+            password: password.to_string(),
+            save: false,
+        }))
+    } else {
+        // Fallback: assume no save
+        Ok(Some(PromptResult {
+            password: result,
+            save: false,
+        }))
+    }
+}
+
+pub(crate) fn build_password_script(prompt: &str, show_save_checkbox: bool) -> String {
+    format!(
         r#"
 Add-Type -TypeDefinition @"
 using System;
@@ -176,7 +225,7 @@ public class CredUI {{
 "@
 
 $save = $false
-$password = [CredUI]::Prompt("SSH Key Passphrase", "{prompt}", "", [ref]$save)
+$password = [CredUI]::Prompt("SSH Key Passphrase", '{prompt}', "", [ref]$save)
 if ($password -ne $null) {{
     # Output format: SAVE|password or NOSAVE|password
     if ($save) {{
@@ -186,44 +235,7 @@ if ($password -ne $null) {{
     }}
 }}
 "#,
-        prompt = prompt.replace("`", "``").replace("'", "''"),
+        prompt = escape_ps_single_quoted(prompt),
         show_checkbox = if show_save_checkbox { "true" } else { "false" }
-    );
-
-    let output = Command::new("powershell.exe")
-        .args(["-NoProfile", "-Command", &script])
-        .output()
-        .context("Failed to execute PowerShell")?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        // Check if user cancelled
-        if stderr.contains("1223") || output.stdout.is_empty() {
-            return Ok(None);
-        }
-        anyhow::bail!("PowerShell error: {}", stderr);
-    }
-
-    let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if result.is_empty() {
-        return Ok(None);
-    }
-
-    if let Some(password) = result.strip_prefix("SAVE|") {
-        Ok(Some(PromptResult {
-            password: password.to_string(),
-            save: true,
-        }))
-    } else if let Some(password) = result.strip_prefix("NOSAVE|") {
-        Ok(Some(PromptResult {
-            password: password.to_string(),
-            save: false,
-        }))
-    } else {
-        // Fallback: assume no save
-        Ok(Some(PromptResult {
-            password: result,
-            save: false,
-        }))
-    }
+    )
 }
