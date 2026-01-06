@@ -177,4 +177,22 @@ mod tests {
         let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa': ";
         assert!(!is_host_authenticity_prompt(prompt));
     }
+
+    #[test]
+    fn test_confirmation_script_escapes_ssh_prompt() {
+        let prompt = "The authenticity of host 'foo (1.2.3.4)' can't be established.";
+        let script = dialog::build_confirmation_script(prompt);
+        assert!(script.contains(
+            "The authenticity of host ''foo (1.2.3.4)'' can''t be established."
+        ));
+    }
+
+    #[test]
+    fn test_password_script_escapes_ssh_prompt() {
+        let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa': ";
+        let script = dialog::build_password_script(prompt, true);
+        assert!(script.contains(
+            "Enter passphrase for key ''/home/user/.ssh/id_rsa'': "
+        ));
+    }
 }
