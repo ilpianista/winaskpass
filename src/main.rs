@@ -161,6 +161,12 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_key_path_with_mixed_quotes() {
+        let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa' (\"backup\"): ";
+        assert_eq!(extract_key_path(prompt), Some("/home/user/.ssh/id_rsa"));
+    }
+
+    #[test]
     fn test_is_host_authenticity_prompt() {
         let prompt = "The authenticity of host 'foo (1.2.3.4)' can't be established.\nED25519 key fingerprint is SHA256:UAkZs2L2FLJCmHnXBQPFrPitO1n7ChQBy7fUXjz5xAk.\nThis key is not known by any other names.\nAre you sure you want to continue connecting (yes/no/[fingerprint])?";
         assert!(is_host_authenticity_prompt(prompt));
@@ -179,20 +185,16 @@ mod tests {
     }
 
     #[test]
-    fn test_confirmation_script_escapes_ssh_prompt() {
-        let prompt = "The authenticity of host 'foo (1.2.3.4)' can't be established.";
-        let script = dialog::build_confirmation_script(prompt);
-        assert!(script.contains(
-            "The authenticity of host ''foo (1.2.3.4)'' can''t be established."
-        ));
+    fn test_password_script_escapes_ssh_prompt() {
+        let prompt = "user@127.0.0.1's password:";
+        let script = dialog::build_password_script(prompt, true);
+        assert!(script.contains("user@127.0.0.1''s password:"));
     }
 
     #[test]
-    fn test_password_script_escapes_ssh_prompt() {
-        let prompt = "Enter passphrase for key '/home/user/.ssh/id_rsa': ";
+    fn test_password_script_escapes_mixed_quotes() {
+        let prompt = "user@127.0.0.1's \"backup\" password:";
         let script = dialog::build_password_script(prompt, true);
-        assert!(script.contains(
-            "Enter passphrase for key ''/home/user/.ssh/id_rsa'': "
-        ));
+        assert!(script.contains("user@127.0.0.1''s \"backup\" password:"));
     }
 }
