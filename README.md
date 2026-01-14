@@ -31,6 +31,10 @@ To make `ssh` use `winaskpass` set `SSH_ASKPASS=/path/to/winaskpass`.
 
 Then invoke `ssh-add </dev/null`.
 
+## Donate
+
+Donations via [Liberapay](https://liberapay.com/ilpianista) or Bitcoin (1Ph3hFEoQaD4PK6MhL3kBNNh9FZFBfisEH) are always welcomed, _thank you_!
+
 ## License
 
 MIT
