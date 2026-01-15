@@ -1,5 +1,22 @@
-mod credential;
-mod dialog;
+#[cfg(feature = "native")]
+mod credential_native;
+#[cfg(feature = "native")]
+use credential_native as credential;
+
+#[cfg(feature = "powershell")]
+mod credential_powershell;
+#[cfg(feature = "powershell")]
+use credential_powershell as credential;
+
+#[cfg(feature = "native")]
+mod dialog_native;
+#[cfg(feature = "native")]
+use dialog_native as dialog;
+
+#[cfg(feature = "powershell")]
+mod dialog_powershell;
+#[cfg(feature = "powershell")]
+use dialog_powershell as dialog;
 
 use anyhow::Result;
 use std::env;
@@ -100,6 +117,11 @@ fn handle_list() -> Result<()> {
 }
 
 fn print_help() {
+    #[cfg(feature = "native")]
+    let binary_name = "winaskpass.exe";
+    #[cfg(feature = "powershell")]
+    let binary_name = "winaskpass";
+
     eprintln!(
         r#"winaskpass - ssh-add helper for WSL with Windows Credential Manager
 
@@ -110,14 +132,15 @@ USAGE:
 
 SETUP:
     Add to your ~/.bashrc or ~/.zshrc:
-        export SSH_ASKPASS=winaskpass
+        export SSH_ASKPASS={}
         export SSH_ASKPASS_REQUIRE=prefer
 
     Then use ssh-add normally:
         ssh-add </dev/null
 
     The passphrase will be cached in Windows Credential Manager.
-"#
+"#,
+        binary_name
     );
 }
 
