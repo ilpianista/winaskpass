@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/ilpianista/winaskpass/compare/v0.3.0...v0.4.0) (2026-01-15)
+
+
+### Features
+
+* add native build ([88b6a03](https://github.com/ilpianista/winaskpass/commit/88b6a03ea8f01447f3ae785cb07ad115b333e927))
+
+
+### Bug Fixes
+
+* PowerShell prompt escaping ([52146d8](https://github.com/ilpianista/winaskpass/commit/52146d8134a990547d475b8e79676bea981e0dd0))
+
 ## [0.3.0](https://github.com/ilpianista/winaskpass/compare/v0.2.0...v0.3.0) (2026-01-02)
 
 
