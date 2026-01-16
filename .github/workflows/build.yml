@@ -32,18 +32,3 @@ jobs:
           command: "build"
           target: ${{ matrix.platform.target }}
           args: "--locked --release ${{ matrix.platform.cargo_extra_args }}"
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ matrix.platform.runs-on }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build
-        run: >
-          cargo build
-          --locked
-          --verbose
