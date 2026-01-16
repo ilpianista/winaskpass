@@ -1,17 +1,16 @@
 use anyhow::Result;
 use std::ptr;
-use windows::core::{PCWSTR, PWSTR};
 use windows::Win32::Foundation::{ERROR_CANCELLED, HWND};
 use windows::Win32::Security::Credentials::{
-    CredPackAuthenticationBufferW, CredUIPromptForWindowsCredentialsW,
-    CredUnPackAuthenticationBufferW, CREDUIWIN_CHECKBOX, CREDUIWIN_FLAGS, CREDUIWIN_GENERIC,
-    CREDUIWIN_IN_CRED_ONLY, CREDUI_INFOW, CRED_PACK_FLAGS,
+    CRED_PACK_FLAGS, CREDUI_INFOW, CREDUIWIN_CHECKBOX, CREDUIWIN_FLAGS, CREDUIWIN_GENERIC,
+    CREDUIWIN_IN_CRED_ONLY, CredPackAuthenticationBufferW, CredUIPromptForWindowsCredentialsW,
+    CredUnPackAuthenticationBufferW,
 };
 use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::UI::WindowsAndMessaging::{
-    MessageBoxW, IDCANCEL, IDNO, IDYES, MESSAGEBOX_STYLE, MB_ICONWARNING,
-    MB_YESNOCANCEL,
+    IDCANCEL, IDNO, IDYES, MB_ICONWARNING, MB_YESNOCANCEL, MESSAGEBOX_STYLE, MessageBoxW,
 };
+use windows::core::{PCWSTR, PWSTR};
 
 pub struct PromptResult {
     pub password: String,

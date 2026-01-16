@@ -1,10 +1,10 @@
 use anyhow::Result;
 use std::ptr;
-use windows::core::PWSTR;
 use windows::Win32::Security::Credentials::{
-    CredEnumerateW, CredFree, CredReadW, CredWriteW, CREDENTIALW, CRED_FLAGS,
-    CRED_PERSIST_LOCAL_MACHINE, CRED_TYPE_GENERIC,
+    CRED_FLAGS, CRED_PERSIST_LOCAL_MACHINE, CRED_TYPE_GENERIC, CREDENTIALW, CredEnumerateW,
+    CredFree, CredReadW, CredWriteW,
 };
+use windows::core::PWSTR;
 
 const CREDENTIAL_PREFIX: &str = "winaskpass:";
 
@@ -34,18 +34,17 @@ pub fn get_credential(key_path: &str) -> Result<Option<String>> {
                 }
 
                 let credential = &*credential_ptr;
-                let password = if credential.CredentialBlob.is_null()
-                    || credential.CredentialBlobSize == 0
-                {
-                    None
-                } else {
-                    // Password is stored as Unicode (UTF-16)
-                    let slice = std::slice::from_raw_parts(
-                        credential.CredentialBlob as *const u16,
-                        credential.CredentialBlobSize as usize / 2,
-                    );
-                    Some(String::from_utf16_lossy(slice))
-                };
+                let password =
+                    if credential.CredentialBlob.is_null() || credential.CredentialBlobSize == 0 {
+                        None
+                    } else {
+                        // Password is stored as Unicode (UTF-16)
+                        let slice = std::slice::from_raw_parts(
+                            credential.CredentialBlob as *const u16,
+                            credential.CredentialBlobSize as usize / 2,
+                        );
+                        Some(String::from_utf16_lossy(slice))
+                    };
 
                 CredFree(credential_ptr as *const _);
                 Ok(password)

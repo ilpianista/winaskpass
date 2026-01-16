@@ -231,7 +231,8 @@ mod tests {
 
     #[test]
     fn test_bad_passphrase_retry_with_confirm() {
-        let prompt = "Bad passphrase, try again for /home/user/.ssh/id_rsa (will confirm each use): ";
+        let prompt =
+            "Bad passphrase, try again for /home/user/.ssh/id_rsa (will confirm each use): ";
         assert!(extract_key_path(prompt).is_some());
     }
 
