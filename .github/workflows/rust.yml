@@ -9,9 +9,29 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - os-name: Windows-x86_64
+            runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+            cargo_extra_args: --no-default-features --features native
+          - os-name: Ubuntu-x86_64
+            runs-on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.platform.runs-on }}
     steps:
       - uses: actions/checkout@v5
+
+      - run: cargo fmt --check
+
+      - run: cargo clippy
+
+      - uses: houseabsolute/actions-rust-cross@v1
+        with:
+          command: "build"
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release ${{ matrix.platform.cargo_extra_args }}"
 
       - name: Cache
         uses: actions/cache@v4
@@ -20,7 +40,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.platform.runs-on }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build
         run: >
