@@ -27,11 +27,7 @@ cargo build --release --locked
 
 ### Windows
 
-`WinGet` can be used to install in `%PATH%`:
-
-```
-winget install winaskpass
-```
+Download latest `.exe` file and put in your `%PATH`.
 
 When built natively uses Windows APIs directly, build with the `native` feature and the `x86_64-pc-windows-msvc` target:
 
