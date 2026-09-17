@@ -41,7 +41,7 @@ cargo build --release --no-default-features --features native --target x86_64-pc
 
 To make `ssh` use `winaskpass` set `SSH_ASKPASS=/path/to/winaskpass` or `SSH_ASKPASS=/path/to/winaskpass.exe` depending on your choice.
 
-`SSH_ASKPASS_REQUIRE=prefer` might be required as well.
+`SSH_ASKPASS_REQUIRE=prefer`, or `SSH_ASKPASS_REQUIRE=force` if you have disabled GUI applications, might be required as well.
 
 Then invoke `ssh-add </dev/null`.
 
